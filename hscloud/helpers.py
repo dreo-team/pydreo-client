@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime
 from typing import Optional
-from hscloud.hscloudexception import HsCloudException, HsCloudAccessDeniedException, HsCloudFlowControlException
+from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException, HsCloudAccessDeniedException, HsCloudFlowControlException
 
 class Helpers:
 
@@ -85,8 +85,6 @@ class Helpers:
 
         except requests.exceptions.RequestException as e:
             raise HsCloudException(e)
-        except Exception as e:
-            raise HsCloudException(e)
         else:
             if response.status_code == 200:
                 response_body = response.json()
@@ -94,9 +92,9 @@ class Helpers:
                 if code == 0:
                     result = response_body.get("data")
                 elif code == 401:
-                    raise HsCloudAccessDeniedException("")
+                    raise HsCloudAccessDeniedException("invalid auth")
                 else:
-                    raise HsCloudException(response_body.get("msg"))
+                    raise HsCloudBusinessException(response_body.get("msg"))
 
             elif response.status_code == 429:
                 raise HsCloudFlowControlException("Your request is too frequent, please try again later.")

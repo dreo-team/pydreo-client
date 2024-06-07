@@ -1,5 +1,5 @@
 from .helpers import Helpers
-from hscloud.hscloudexception import HsCloudException, HsCloudAccessDeniedException, HsCloudFlowControlException
+from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException, HsCloudAccessDeniedException, HsCloudFlowControlException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,46 +14,16 @@ class HsCloud:
         self.access_token = None
 
     def login(self):
-        try:
-            response = Helpers.login(self.username, self.password)
-            self.endpoint = response.get("endpoint")
-            self.access_token = response.get("access_token")
-            return True
-        except HsCloudException as e:
-            logger.error(e)
-            return False
-        except HsCloudAccessDeniedException as e:
-            logger.error(e)
-            return False
-        except HsCloudFlowControlException as e:
-            logger.error(e)
-            return False
+        response = Helpers.login(self.username, self.password)
+        self.endpoint = response.get("endpoint")
+        self.access_token = response.get("access_token")
+        return response
 
     def get_devices(self):
-        try:
-            return Helpers.devices(self.endpoint, self.access_token)
-        except HsCloudException as e:
-            logger.error(e)
-            return None
-        except HsCloudAccessDeniedException as e:
-            logger.error(e)
-            return None
-        except HsCloudFlowControlException as e:
-            logger.error(e)
-            return None
+        return Helpers.devices(self.endpoint, self.access_token)
 
     def get_status(self, devicesn):
-        try:
-            return Helpers.status(self.endpoint, self.access_token, devicesn)
-        except HsCloudException as e:
-            logger.error(e)
-            return None
-        except HsCloudAccessDeniedException as e:
-            logger.error(e)
-            return None
-        except HsCloudFlowControlException as e:
-            logger.error(e)
-            return None
+        return Helpers.status(self.endpoint, self.access_token, devicesn)
 
     def update_status(self, devicesn, **kwargs):
         return Helpers.update(self.endpoint, self.access_token, devicesn, **kwargs)
