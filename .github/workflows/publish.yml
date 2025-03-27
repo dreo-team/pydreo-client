@@ -16,19 +16,23 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build twine
+        pip install setuptools wheel build twine  # 添加了 setuptools 和 wheel
     - name: Verify tag matches version
       run: |
+        echo "Building package..."
         # Extract version from package
         PACKAGE_VERSION=$(python setup.py --version)
+        echo "Package version: $PACKAGE_VERSION"
         # Extract version from git tag (strip 'v' prefix if present)
         GIT_TAG=${GITHUB_REF#refs/tags/}
         GIT_TAG=${GIT_TAG#v}
+        echo "Git tag version: $GIT_TAG"
         # Check if versions match
         if [ "$PACKAGE_VERSION" != "$GIT_TAG" ]; then
           echo "Error: Package version ($PACKAGE_VERSION) does not match git tag ($GIT_TAG)"
           exit 1
         fi
+        echo "Version verification successful"
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
