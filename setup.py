@@ -11,7 +11,7 @@ setup(
     name = 'hscloud',
     packages = ['hscloud'],
     include_package_data=True,
-    version = '1.0.3',
+    version = '1.0.4',
     license='MIT',
     description = 'Library to login to Dreo cloud and get device info.',
     author = 'Kane Wang',
