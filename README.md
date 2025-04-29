@@ -69,7 +69,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Dreo Team: [app@hesung.com](mailto:app@hesung.com)
+Dreo Team: [app@hesung.com](mailto:developer@dreo.com)
 
 Project Link: [https://github.com/dreo-team/hscloud](https://github.com/dreo-team/hscloud)
 
