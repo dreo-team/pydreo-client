@@ -9,7 +9,7 @@ from typing import Optional
 
 import requests
 
-from dreo.cloudexception import (
+from dreo.exceptions import (
     DreoCloudBusinessException,
     DreoCloudException,
     DreoCloudFlowControlException,
