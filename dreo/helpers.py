@@ -9,7 +9,7 @@ from typing import Optional
 
 import requests
 
-from dreo.dreoCloudexception import (
+from dreo.cloudexception import (
     DreoCloudBusinessException,
     DreoCloudException,
     DreoCloudFlowControlException,
@@ -134,7 +134,7 @@ class Helpers:
         json_body: Optional[dict] = None,
     ) -> tuple:
         """
-        Make HTTP API calls to HSCloud endpoints.
+        Make HTTP API calls to DreoCloud endpoints.   
         
         Args:
             api (str): API endpoint URL.
@@ -147,9 +147,9 @@ class Helpers:
             tuple: API response data.
             
         Raises:
-            HsCloudException: For general API errors.
-            HsCloudBusinessException: For business logic errors.
-            HsCloudFlowControlException: For rate limiting errors.
+            DreoCloudException: For general API errors.
+            DreoCloudBusinessException: For business logic errors.
+            DreoCloudFlowControlException: For rate limiting errors.
         """
         result = None
         response = None

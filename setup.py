@@ -1,4 +1,4 @@
-"""hscloud setup script."""
+"""  setup script."""
 
 from os import path
 from setuptools import setup
@@ -11,21 +11,21 @@ setup(
     name = 'pydreo-cloud',
     packages = ['dreo'],
     include_package_data=True,
-    version = '0.0.1',
+    version = '0.0.2',
     license='MIT',
-    description = 'Library to login to Dreo cloud and get device info.',
+    description = 'Library to login to Dreo cloud, get device list and device status information.',
     author = 'Brooke Wang',
     author_email = 'developer@dreo.com',
     url = 'https://github.com/dreo-team/pydreo-cloud',
-    download_url = 'https://github.com/dreo-team/pydreo-cloud/archive/refs/tags/0.0.1.tar.gz',
+    download_url = 'https://github.com/dreo-team/pydreo-cloud/archive/refs/tags/0.0.2.tar.gz',
     install_requires=[
         'requests',
         'tzlocal',
         'click',
         'pycryptodome'
     ],
-    # entry_points='''
-    #     [console_scripts]
-    #     dreo=dreo.cli:cli
-    # ''',
+    entry_points='''
+        [console_scripts]
+        dreo=dreo.cli:cli
+    ''',
 )

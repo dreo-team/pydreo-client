@@ -5,7 +5,7 @@ This module defines custom exception classes for different types of DreoCloud AP
 """
 
 
-class DreoCloudException(Exception):
+class DreoException(Exception):
     """Base exception class for DreoCloud API errors."""
 
     def __init__(self, message):
@@ -19,7 +19,7 @@ class DreoCloudException(Exception):
         super().__init__(self.message)
 
 
-class DreoCloudBusinessException(Exception):
+class DreoBusinessException(Exception):
     """Exception for DreoCloud business logic errors."""
 
     def __init__(self, message):
@@ -33,7 +33,7 @@ class DreoCloudBusinessException(Exception):
         super().__init__(self.message)
 
 
-class DreoCloudAccessDeniedException(Exception):
+class DreoAccessDeniedException(Exception):
     """Exception for DreoCloud access denied errors."""
 
     def __init__(self, message):
@@ -47,7 +47,7 @@ class DreoCloudAccessDeniedException(Exception):
         super().__init__(self.message)
 
 
-class DreoCloudFlowControlException(Exception):
+class DreoFlowControlException(Exception):
     """Exception for DreoCloud flow control errors (rate limiting)."""
 
     def __init__(self, message):

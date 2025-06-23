@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
-# Library to login to Dreo cloud and get device info.
+# Library to login to Dreo cloud, get device list and device status information.
 #
-# (C) 2024 kane wang
+# (C) 2025 Brooke Wang
 # Released under MIT License
-# email app@hesung.com
+# email developer@dreo.com
 # -----------------------------------------------------------
