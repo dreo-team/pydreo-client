@@ -10,7 +10,7 @@ from .helpers import Helpers
 logger = logging.getLogger(__name__)
 
 
-class Client:
+class DreoClient:
     """
     HSCloud API client for device management.
     
