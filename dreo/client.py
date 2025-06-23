@@ -1,5 +1,5 @@
 """
-HSCloud client module for interacting with the HSCloud API.
+DreoCloud client module for interacting with the DreoCloud API.
 
 This module provides a Client class for authentication and device management.
 """
@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 
 class DreoClient:
     """
-    HSCloud API client for device management.
+    DreoCloud API client for device management.
     
     This class handles authentication and provides methods for interacting
-    with HSCloud devices.
+    with DreoCloud devices.
     """
     def __init__(self, username=None, password=None):
         """
-        Initialize the HSCloud client.
+        Initialize the DreoCloud client.
         
         Args:
             username (str, optional): Username for authentication.
@@ -33,7 +33,7 @@ class DreoClient:
 
     def login(self):
         """
-        Authenticate with the HSCloud API.
+        Authenticate with the DreoCloud API.
         
         Returns:
             dict: Authentication response containing endpoint and access token.

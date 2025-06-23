@@ -9,10 +9,10 @@ from typing import Optional
 
 import requests
 
-from hscloud.hscloudexception import (
-    HsCloudBusinessException,
-    HsCloudException,
-    HsCloudFlowControlException,
+from dreo.dreoCloudexception import (
+    DreoCloudBusinessException,
+    DreoCloudException,
+    DreoCloudFlowControlException,
 )
 
 
@@ -161,7 +161,7 @@ class Helpers:
                     api, headers=headers, params=params, json=json_body, timeout=8
                 )
         except requests.exceptions.RequestException as e:
-            raise HsCloudException(e) from e
+            raise DreoCloudException(e) from e
 
         if response is not None:
             if response.status_code == 200:
@@ -170,19 +170,19 @@ class Helpers:
                 if code == 0:
                     result = response_body.get("data")
                 else:
-                    raise HsCloudBusinessException(response_body.get("msg"))
+                    raise DreoCloudBusinessException(response_body.get("msg"))
             elif response.status_code == 401:
-                raise HsCloudBusinessException("invalid auth")
+                raise DreoCloudBusinessException("invalid auth")
             elif response.status_code == 429:
-                raise HsCloudFlowControlException(
+                raise DreoCloudFlowControlException(
                     "Your request is too frequent, please try again later."
                 )
             else:
-                raise HsCloudException(
+                raise DreoCloudException(
                     "There is a service problem, please try again later."
                 )
         else:
-            raise HsCloudException("No response received from server")
+            raise DreoCloudException("No response received from server")
 
         return result
 

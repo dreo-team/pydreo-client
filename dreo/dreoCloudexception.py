@@ -1,16 +1,16 @@
 """
-HSCloud exception classes.
+DreoCloud exception classes.
 
-This module defines custom exception classes for different types of HSCloud API errors.
+This module defines custom exception classes for different types of DreoCloud API errors.
 """
 
 
-class HsCloudException(Exception):
-    """Base exception class for HSCloud API errors."""
+class DreoCloudException(Exception):
+    """Base exception class for DreoCloud API errors."""
 
     def __init__(self, message):
         """
-        Initialize HSCloud exception.
+        Initialize DreoCloud exception.
         
         Args:
             message: Error message describing the exception.
@@ -19,12 +19,12 @@ class HsCloudException(Exception):
         super().__init__(self.message)
 
 
-class HsCloudBusinessException(Exception):
-    """Exception for HSCloud business logic errors."""
+class DreoCloudBusinessException(Exception):
+    """Exception for DreoCloud business logic errors."""
 
     def __init__(self, message):
         """
-        Initialize HSCloud business exception.
+        Initialize DreoCloud business exception.
         
         Args:
             message: Error message describing the business logic error.
@@ -33,12 +33,12 @@ class HsCloudBusinessException(Exception):
         super().__init__(self.message)
 
 
-class HsCloudAccessDeniedException(Exception):
-    """Exception for HSCloud access denied errors."""
+class DreoCloudAccessDeniedException(Exception):
+    """Exception for DreoCloud access denied errors."""
 
     def __init__(self, message):
         """
-        Initialize HSCloud access denied exception.
+        Initialize DreoCloud access denied exception.
         
         Args:
             message: Error message describing the access denial.
@@ -47,12 +47,12 @@ class HsCloudAccessDeniedException(Exception):
         super().__init__(self.message)
 
 
-class HsCloudFlowControlException(Exception):
-    """Exception for HSCloud flow control errors (rate limiting)."""
+class DreoCloudFlowControlException(Exception):
+    """Exception for DreoCloud flow control errors (rate limiting)."""
 
     def __init__(self, message):
         """
-        Initialize HSCloud flow control exception.
+        Initialize DreoCloud flow control exception.
         
         Args:
             message: Error message describing the flow control issue.
