@@ -17,6 +17,7 @@ DEVICE_TYPE = {
 FAN_DEVICE = {
     "type": "fan",
     "config": {
+        # Tower Fans
         "DR-HTF001S": {
             "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
             "speed_range": (1, 6)
@@ -56,5 +57,3 @@ FAN_DEVICE = {
     }
 }
 
-# light
-...
