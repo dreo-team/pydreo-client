@@ -1,45 +1,54 @@
 """
-HSCloud helper utilities.
+DreoCloud helper utilities.
 
-This module provides helper functions for interacting with the HSCloud API,
+This module provides helper functions for interacting with the DreoCloud API,
 including authentication, device management, and API communication.
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
+import logging
 
 import requests
 
-from dreo.exceptions import (
-    DreoCloudBusinessException,
-    DreoCloudException,
-    DreoCloudFlowControlException,
+from .const import BASE_URL, CLIENT_ID, CLIENT_SECRET, USER_AGENT, REQUEST_TIMEOUT, ENDPOINTS
+from .exceptions import (
+    DreoBusinessException,
+    DreoException,
+    DreoFlowControlException,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class Helpers:
-    """Helper class containing static methods for HSCloud API operations."""
+    """Helper class containing static methods for DreoCloud API operations."""
 
     @staticmethod
-    def login(username=None, password=None):
+    def login(username: str, password: str) -> Dict[str, Any]:
         """
-        Authenticate with HSCloud API using username and password.
-        
+        Authenticate with DreoCloud API using username and password.
+
         Args:
-            username (str, optional): User's email address.
-            password (str, optional): User's password.
-            
+            username: User's email address.
+            password: User's password.
+
         Returns:
-            dict: Authentication response containing access token and endpoint.
+            Authentication response containing access token and endpoint.
+
+        Raises:
+            DreoException: If authentication fails.
         """
-        base_url = "https://open-api-us.dreo-cloud.com"
+        if not username or not password:
+            raise DreoException("Username and password are required")
 
-        headers = {"Content-Type": "application/json", "UA": "openapi/1.0.0"}
-
+        headers = {
+            "Content-Type": "application/json",
+            "UA": USER_AGENT
+        }
         params = {"timestamp": Helpers.timestamp()}
-
         body = {
-            "client_id": "89ef537b2202481aaaf9077068bcb0c9",
-            "client_secret": "41b20a1f60e9499e89c8646c31f93ea1",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
             "grant_type": "openapi",
             "scope": "all",
             "email": username,
@@ -47,78 +56,110 @@ class Helpers:
         }
 
         return Helpers.call_api(
-            base_url + "/api/oauth/login", "post", headers, params, body
+            BASE_URL + ENDPOINTS["LOGIN"],
+            "post",
+            headers,
+            params,
+            body
         )
 
     @staticmethod
-    def devices(endpoint=None, access_token=None):
+    def devices(endpoint: str, access_token: str) -> Dict[str, Any]:
         """
         Get list of devices associated with the account.
-        
+
         Args:
-            endpoint (str, optional): API endpoint URL.
-            access_token (str, optional): Authentication access token.
-            
+            endpoint: API endpoint URL.
+            access_token: Authentication access token.
+
         Returns:
-            dict: List of devices.
+            List of devices.
+
+        Raises:
+            DreoException: If API call fails.
         """
+        if not endpoint or not access_token:
+            raise DreoException("Endpoint and access token are required")
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {access_token}",
-            "UA": "openapi/1.0.0",
+            "UA": USER_AGENT,
         }
-
-        params = {"timestamp": Helpers.timestamp()}
-
-        return Helpers.call_api(endpoint + "/api/device/list", "get", headers, params)
-
-    @staticmethod
-    def status(endpoint=None, access_token=None, devicesn=None):
-        """
-        Get current status of a specific device.
-        
-        Args:
-            endpoint (str, optional): API endpoint URL.
-            access_token (str, optional): Authentication access token.
-            devicesn (str, optional): Device serial number.
-            
-        Returns:
-            dict: Device status information.
-        """
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}",
-            "UA": "openapi/1.0.0",
-        }
-
-        params = {"deviceSn": devicesn, "timestamp": Helpers.timestamp()}
-
-        return Helpers.call_api(endpoint + "/api/device/state", "get", headers, params)
-
-    @staticmethod
-    def update(endpoint=None, access_token=None, devicesn=None, **kwargs):
-        """
-        Update device settings.
-        
-        Args:
-            endpoint (str, optional): API endpoint URL.
-            access_token (str, optional): Authentication access token.
-            devicesn (str, optional): Device serial number.
-            **kwargs: Device parameters to update.
-            
-        Returns:
-            dict: Update response.
-        """
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}",
-            "UA": "openapi/1.0.0",
-        }
-
         params = {"timestamp": Helpers.timestamp()}
 
         return Helpers.call_api(
-            endpoint + "/api/device/control",
+            endpoint + ENDPOINTS["DEVICES"],
+            "get",
+            headers,
+            params
+        )
+
+    @staticmethod
+    def status(endpoint: str, access_token: str, devicesn: str) -> Dict[str, Any]:
+        """
+        Get current status of a specific device.
+
+        Args:
+            endpoint: API endpoint URL.
+            access_token: Authentication access token.
+            devicesn: Device serial number.
+
+        Returns:
+            Device status information.
+
+        Raises:
+            DreoException: If API call fails.
+        """
+        if not all([endpoint, access_token, devicesn]):
+            raise DreoException("Endpoint, access token, and device serial number are required")
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}",
+            "UA": USER_AGENT,
+        }
+        params = {
+            "deviceSn": devicesn,
+            "timestamp": Helpers.timestamp()
+        }
+
+        return Helpers.call_api(
+            endpoint + ENDPOINTS["DEVICE_STATE"],
+            "get",
+            headers,
+            params
+        )
+
+    @staticmethod
+    def update(endpoint: str, access_token: str, devicesn: str, **kwargs) -> Dict[str, Any]:
+        """
+        Update device settings.
+
+        Args:
+            endpoint: API endpoint URL.
+            access_token: Authentication access token.
+            devicesn: Device serial number.
+            **kwargs: Device parameters to update.
+
+        Returns:
+            Update response.
+
+        Raises:
+            DreoException: If API call fails.
+        """
+        if not all([endpoint, access_token, devicesn]):
+            raise DreoException("Endpoint, access token, and device serial number are required")
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}",
+            "UA": USER_AGENT,
+        }
+        params = {"timestamp": Helpers.timestamp()}
+
+        return Helpers.call_api(
+            endpoint + ENDPOINTS["DEVICE_CONTROL"],
             "post",
             headers,
             params,
@@ -129,90 +170,123 @@ class Helpers:
     def call_api(
         api: str,
         method: str,
-        headers: Optional[dict] = None,
-        params: Optional[dict] = None,
-        json_body: Optional[dict] = None,
-    ) -> tuple:
+        headers: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
+        json_body: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """
-        Make HTTP API calls to DreoCloud endpoints.   
-        
+        Make HTTP API calls to DreoCloud endpoints.
+
         Args:
-            api (str): API endpoint URL.
-            method (str): HTTP method ('get' or 'post').
-            headers (dict, optional): HTTP headers.
-            params (dict, optional): URL parameters.
-            json_body (dict, optional): JSON request body.
-            
+            api: API endpoint URL.
+            method: HTTP method ('get' or 'post').
+            headers: HTTP headers.
+            params: URL parameters.
+            json_body: JSON request body.
+
         Returns:
-            tuple: API response data.
-            
+            API response data.
+
         Raises:
-            DreoCloudException: For general API errors.
-            DreoCloudBusinessException: For business logic errors.
-            DreoCloudFlowControlException: For rate limiting errors.
+            DreoException: For general API errors.
+            DreoBusinessException: For business logic errors.
+            DreoFlowControlException: For rate limiting errors.
         """
-        result = None
-        response = None
         try:
+            response = None
             if method.lower() == "get":
-                response = requests.get(api, headers=headers, params=params, timeout=8)
+                response = requests.get(
+                    api,
+                    headers=headers,
+                    params=params,
+                    timeout=REQUEST_TIMEOUT
+                )
             elif method.lower() == "post":
                 response = requests.post(
-                    api, headers=headers, params=params, json=json_body, timeout=8
+                    api,
+                    headers=headers,
+                    params=params,
+                    json=json_body,
+                    timeout=REQUEST_TIMEOUT
                 )
-        except requests.exceptions.RequestException as e:
-            raise DreoCloudException(e) from e
+            else:
+                raise DreoException(f"Unsupported HTTP method: {method}")
 
-        if response is not None:
-            if response.status_code == 200:
+        except requests.exceptions.Timeout as exc:
+            raise DreoException("Request timed out") from exc
+        except requests.exceptions.ConnectionError as exc:
+            raise DreoException("Connection error") from exc
+        except requests.exceptions.RequestException as e:
+            raise DreoException(f"Request failed: {str(e)}") from e
+
+        if response is None:
+            raise DreoException("No response received from server")
+
+        return Helpers._handle_response(response)
+
+    @staticmethod
+    def _handle_response(response: requests.Response) -> Dict[str, Any]:
+        """
+        Handle API response and extract data.
+
+        Args:
+            response: HTTP response object.
+
+        Returns:
+            Response data.
+
+        Raises:
+            DreoException: For various API errors.
+        """
+        if response.status_code == 200:
+            try:
                 response_body = response.json()
                 code = response_body.get("code")
                 if code == 0:
-                    result = response_body.get("data")
-                else:
-                    raise DreoCloudBusinessException(response_body.get("msg"))
-            elif response.status_code == 401:
-                raise DreoCloudBusinessException("invalid auth")
-            elif response.status_code == 429:
-                raise DreoCloudFlowControlException(
-                    "Your request is too frequent, please try again later."
+                    return response_body.get("data", {})
+                raise DreoBusinessException(
+                    response_body.get("msg", "Unknown business error")
                 )
-            else:
-                raise DreoCloudException(
-                    "There is a service problem, please try again later."
-                )
-        else:
-            raise DreoCloudException("No response received from server")
+            except ValueError as e:
+                raise DreoException(f"Invalid JSON response: {str(e)}") from e
 
-        return result
+        if response.status_code == 401:
+            raise DreoBusinessException("Invalid authentication credentials")
+        if response.status_code == 429:
+            raise DreoFlowControlException(
+                "Request rate limit exceeded. Please try again later."
+            )
+        if response.status_code >= 500:
+            raise DreoException(
+                "Server error occurred. Please try again later."
+            )
+        raise DreoException(
+            f"API request failed with status code: {response.status_code}"
+        )
 
     @staticmethod
-    def update_body(devicesn, **kwargs):
+    def update_body(devicesn: str, **kwargs) -> Dict[str, Any]:
         """
         Create request body for device update operations.
-        
+
         Args:
-            devicesn (str): Device serial number.
+            devicesn: Device serial number.
             **kwargs: Device parameters to update.
-            
+
         Returns:
-            dict: Formatted request body.
+            Formatted request body.
         """
-        data = {"devicesn": devicesn}
-
-        desired = {}
-        for key, value in kwargs.items():
-            desired.update({key: value})
-
-        data.update({"desired": desired})
-        return data
+        return {
+            "devicesn": devicesn,
+            "desired": dict(kwargs)
+        }
 
     @staticmethod
-    def timestamp():
+    def timestamp() -> int:
         """
         Generate current timestamp in milliseconds.
-        
+
         Returns:
-            int: Current timestamp in milliseconds.
+            Current timestamp in milliseconds.
         """
         return int(datetime.now().timestamp() * 1000)

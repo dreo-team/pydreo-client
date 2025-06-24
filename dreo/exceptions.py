@@ -11,7 +11,7 @@ class DreoException(Exception):
     def __init__(self, message):
         """
         Initialize DreoCloud exception.
-        
+
         Args:
             message: Error message describing the exception.
         """
@@ -25,7 +25,7 @@ class DreoBusinessException(Exception):
     def __init__(self, message):
         """
         Initialize DreoCloud business exception.
-        
+
         Args:
             message: Error message describing the business logic error.
         """
@@ -39,7 +39,7 @@ class DreoAccessDeniedException(Exception):
     def __init__(self, message):
         """
         Initialize DreoCloud access denied exception.
-        
+
         Args:
             message: Error message describing the access denial.
         """
@@ -53,7 +53,7 @@ class DreoFlowControlException(Exception):
     def __init__(self, message):
         """
         Initialize DreoCloud flow control exception.
-        
+
         Args:
             message: Error message describing the flow control issue.
         """
