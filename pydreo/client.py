@@ -87,9 +87,7 @@ class DreoClient:
         assert self.access_token is not None
 
         try:
-            devices = Helpers.devices(self.endpoint, self.access_token)
-            logger.debug("Retrieved %d devices", len(devices.get('list', [])))
-            return devices
+            return Helpers.devices(self.endpoint, self.access_token)
         except Exception as e:
             logger.error("Failed to get devices: %s", str(e))
             raise
