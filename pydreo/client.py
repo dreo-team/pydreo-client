@@ -71,6 +71,23 @@ class DreoClient:
             self._authenticated = False
             raise
 
+    def _get_region_from_token(self) -> str:
+        """
+        Get region from access token suffix.
+
+        Returns:
+            Region string (US, EU, or NA).
+        """
+        if not self.access_token:
+            return "Unknown"
+
+        if ":" in self.access_token:
+            token_parts = self.access_token.split(":")
+            if len(token_parts) == 2:
+                return token_parts[1].upper()
+
+        return "US"  # Default to US if no suffix
+
     def get_devices(self) -> Dict[str, Any]:
         """
         Get list of available devices.

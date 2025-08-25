@@ -10,7 +10,7 @@ import logging
 
 import requests
 
-from .const import BASE_URL, CLIENT_ID, CLIENT_SECRET, USER_AGENT, REQUEST_TIMEOUT, ENDPOINTS
+from .const import BASE_URL, EU_BASE_URL, CLIENT_ID, CLIENT_SECRET, USER_AGENT, REQUEST_TIMEOUT, ENDPOINTS
 from .exceptions import (
     DreoBusinessException,
     DreoException,
@@ -22,6 +22,64 @@ logger = logging.getLogger(__name__)
 
 class Helpers:
     """Helper class containing static methods for DreoCloud API operations."""
+
+    @staticmethod
+    def parse_token_and_get_endpoint(access_token: str) -> str:
+        """
+        Parse access token to determine the appropriate endpoint based on region suffix.
+
+        Args:
+            access_token: The access token which may contain region suffix.
+
+        Returns:
+            The appropriate base URL endpoint for the region.
+        """
+        if not access_token:
+            return BASE_URL
+
+        # Check if token has region suffix (format: token:REGION)
+        if ":" in access_token:
+            token_parts = access_token.split(":")
+            if len(token_parts) == 2:
+                region = token_parts[1].upper()
+                if region == "EU":
+                    logger.debug("Using EU endpoint based on token suffix")
+                    return EU_BASE_URL
+                elif region == "NA":
+                    logger.debug("Using US endpoint based on token suffix")
+                    return BASE_URL
+                else:
+                    logger.debug("Unknown region suffix '%s', defaulting to US endpoint", region)
+                    return BASE_URL
+
+        # No suffix or unrecognized format, default to US endpoint
+        logger.debug("No region suffix found in token, using US endpoint")
+        return BASE_URL
+
+    @staticmethod
+    def clean_token(access_token: str) -> str:
+        """
+        Remove region suffix from access token.
+
+        Args:
+            access_token: The access token which may contain region suffix.
+
+        Returns:
+            Clean access token without region suffix.
+        """
+        if not access_token:
+            return access_token
+
+        # Remove region suffix if present (format: token:REGION)
+        if ":" in access_token:
+            token_parts = access_token.split(":")
+            if len(token_parts) == 2:
+                clean_token = token_parts[0]
+                logger.debug("Removed region suffix from token")
+                return clean_token
+
+        # No suffix found, return original token
+        return access_token
 
     @staticmethod
     def login(username: str, password: str) -> Dict[str, Any]:
@@ -55,13 +113,22 @@ class Helpers:
             "password": password,
         }
 
-        return Helpers.call_api(
+        response = Helpers.call_api(
             BASE_URL + ENDPOINTS["LOGIN"],
             "post",
             headers,
             params,
             body
         )
+
+        # Extract access token and determine endpoint based on token suffix
+        access_token = response.get("access_token")
+        if access_token:
+            endpoint = Helpers.parse_token_and_get_endpoint(access_token)
+            response["endpoint"] = endpoint
+            logger.debug("Determined endpoint based on token region")
+
+        return response
 
     @staticmethod
     def devices(endpoint: str, access_token: str) -> Dict[str, Any]:
@@ -81,9 +148,12 @@ class Helpers:
         if not endpoint or not access_token:
             raise DreoException("Endpoint and access token are required")
 
+        # Clean token by removing region suffix
+        clean_token = Helpers.clean_token(access_token)
+
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": f"Bearer {clean_token}",
             "UA": USER_AGENT,
         }
         params = {"timestamp": Helpers.timestamp()}
@@ -114,9 +184,12 @@ class Helpers:
         if not all([endpoint, access_token, devicesn]):
             raise DreoException("Endpoint, access token, and device serial number are required")
 
+        # Clean token by removing region suffix
+        clean_token = Helpers.clean_token(access_token)
+
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": f"Bearer {clean_token}",
             "UA": USER_AGENT,
         }
         params = {
@@ -151,9 +224,12 @@ class Helpers:
         if not all([endpoint, access_token, devicesn]):
             raise DreoException("Endpoint, access token, and device serial number are required")
 
+        # Clean token by removing region suffix
+        clean_token = Helpers.clean_token(access_token)
+
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": f"Bearer {clean_token}",
             "UA": USER_AGENT,
         }
         params = {"timestamp": Helpers.timestamp()}
