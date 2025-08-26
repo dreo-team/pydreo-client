@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.61] - 2024-08-22
+## [0.0.7] - 2024-08-22
 
 ### 🆕 Added
 - **European Region Support**: Added support for European region user login
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.7] - Previous Release
+## [0.0.6] - Previous Release
 
 ### Features
 - Initial release with US region support
