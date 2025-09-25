@@ -11,6 +11,7 @@ import logging
 import requests
 
 from .const import BASE_URL, EU_BASE_URL, CLIENT_ID, CLIENT_SECRET, USER_AGENT, REQUEST_TIMEOUT, ENDPOINTS
+from . import __version__
 from .exceptions import (
     DreoBusinessException,
     DreoException,
@@ -103,7 +104,10 @@ class Helpers:
             "Content-Type": "application/json",
             "UA": USER_AGENT
         }
-        params = {"timestamp": Helpers.timestamp()}
+        params = {
+            "timestamp": Helpers.timestamp(),
+            "pydreover": __version__,
+        }
         body = {
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
@@ -156,7 +160,10 @@ class Helpers:
             "Authorization": f"Bearer {clean_token}",
             "UA": USER_AGENT,
         }
-        params = {"timestamp": Helpers.timestamp()}
+        params = {
+            "timestamp": Helpers.timestamp(),
+            "pydreover": __version__,
+        }
 
         return Helpers.call_api(
             endpoint + ENDPOINTS["DEVICES"],
@@ -194,7 +201,8 @@ class Helpers:
         }
         params = {
             "deviceSn": devicesn,
-            "timestamp": Helpers.timestamp()
+            "timestamp": Helpers.timestamp(),
+            "pydreover": __version__,
         }
 
         return Helpers.call_api(
@@ -232,7 +240,10 @@ class Helpers:
             "Authorization": f"Bearer {clean_token}",
             "UA": USER_AGENT,
         }
-        params = {"timestamp": Helpers.timestamp()}
+        params = {
+            "timestamp": Helpers.timestamp(),
+            "pydreover": __version__,
+        }
 
         return Helpers.call_api(
             endpoint + ENDPOINTS["DEVICE_CONTROL"],
