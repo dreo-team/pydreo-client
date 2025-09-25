@@ -13,4 +13,4 @@ A Python library for interacting with the DreoCloud API to manage smart home dev
 Provides authentication, device discovery, status monitoring, and control capabilities.
 """
 
-__version__ = "0.0.8"
+__version__ = "1.0.0"
