@@ -113,7 +113,7 @@ class Helpers:
             "client_secret": CLIENT_SECRET,
             "grant_type": "openapi",
             "scope": "all",
-            "email": username,
+            "email": username.strip(),
             "password": password,
         }
 
