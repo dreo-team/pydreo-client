@@ -2,15 +2,15 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <h3 align="center">pydreo-cloud</h3>
+  <h3 align="center">pydreo-client</h3>
 
   <p align="center">
-    Library for connecting to dreo cloud.
+    Library for connecting to Dreo cloud.
     <br />
     <br />
-    <a href="https://github.com/dreo-team/pydreo-cloud/issues">Report Bug</a>
+    <a href="https://github.com/dreo-team/pydreo-client/issues">Report Bug</a>
     ·
-    <a href="https://github.com/dreo-team/pydreo-cloud/issues">Request Feature</a>
+    <a href="https://github.com/dreo-team/pydreo-client/issues">Request Feature</a>
   </p>
 </p>
 
@@ -27,9 +27,9 @@ How to get and use pydreo-cloud.
 
 ###  Getting it
 
-To download pydreo-cloud, either fork this github repo or use Pypi via pip.
+To download pydreo-client, either fork this github repo or use Pypi via pip.
 ```sh
-$ pip install pydreo-cloud
+$ pip install pydreo-client
 ```
 
 ### Using it
@@ -38,7 +38,7 @@ You can use pydreo-cloud in your project.
 #### In code:
 As of right now there's not much you can do. You can login and get device info from Dreo cloud:
 ```Python
-from pydreo-cloud.client import DreoClient
+from pydreo.cloud.client import DreoClient
 
 manage = DreoClient("USERNAME", "PASSWORD")
 manage.login()
@@ -62,7 +62,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Dreo Team: [developer@dreo.com](mailto:developer@dreo.com)
 
-Project Link: [https://github.com/dreo-team/pydreo-cloud](https://github.com/dreo-team/pydreo-cloud)
+Project Link: [https://github.com/dreo-team/pydreo-client](https://github.com/dreo-team/pydreo-client)
 
 
 
@@ -70,13 +70,13 @@ Project Link: [https://github.com/dreo-team/pydreo-cloud](https://github.com/dre
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/squachen/micloud.svg?style=flat-square
-[contributors-url]: https://github.com/dreo-team/pydreo-cloud/graphs/contributors
+[contributors-url]: https://github.com/dreo-team/pydreo-client/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/Squachen/micloud.svg?style=flat-square
-[forks-url]: https://github.com/dreo-team/pydreo-cloud/network/members
+[forks-url]: https://github.com/dreo-team/pydreo-client/network/members
 [stars-shield]: https://img.shields.io/github/stars/squachen/micloud.svg?style=flat-square
-[stars-url]: https://github.com/dreo-team/pydreo-cloud/stargazers
+[stars-url]: https://github.com/dreo-team/pydreo-client/stargazers
 [issues-shield]: https://img.shields.io/github/issues/squachen/micloud.svg?style=flat-square
-[issues-url]: https://github.com/dreo-team/pydreo-cloud/issues
+[issues-url]: https://github.com/dreo-team/pydreo-client/issues
 [license-shield]: https://img.shields.io/github/license/squachen/micloud.svg?style=flat-square
-[license-url]: https://github.com/dreo-team/pydreo-cloud/blob/master/LICENSE.txt
+[license-url]: https://github.com/dreo-team/pydreo-client/blob/master/LICENSE.txt
 

@@ -5,6 +5,8 @@
 # Released under MIT License
 # email developer@dreo.com
 # -----------------------------------------------------------
+from .client import DreoClient
+from .helpers import Helpers
 
 """
 DreoCloud Python Library
