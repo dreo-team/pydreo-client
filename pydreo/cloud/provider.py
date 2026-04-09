@@ -5,7 +5,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
-from ..core.exceptions import DreoAuthenticationError, DreoConfigurationError, DreoDeviceNotFoundError
+from ..core.exceptions import (
+    DreoAuthenticationError,
+    DreoConfigurationError,
+    DreoDeviceNotFoundError,
+)
 from ..core.models import (
     CommandResult,
     DeviceIdentity,
@@ -70,10 +74,16 @@ class CloudProvider(BaseProvider):
             raise DreoAuthenticationError("Cloud username and password are required")
 
         response = self._transport.login(self.config.username, self.config.password)
-        self.config.access_token = response.get("access_token")
-        self.config.endpoint = response.get("endpoint") or resolve_cloud_endpoint(self.config.access_token)
+        auth_data = self._extract_response_data(response)
+        if not isinstance(auth_data, Mapping):
+            raise DreoAuthenticationError("Cloud login returned an invalid payload")
+
+        self.config.access_token = auth_data.get("access_token") or auth_data.get("token")
+        self.config.endpoint = auth_data.get("endpoint") or resolve_cloud_endpoint(
+            self.config.access_token
+        )
         self._authenticated = True
-        return response
+        return dict(auth_data)
 
     def discover_devices(self) -> List[DeviceInfo]:
         """Return normalized device discovery results."""
@@ -84,21 +94,24 @@ class CloudProvider(BaseProvider):
         """Return a normalized device state."""
         devicesn = self._resolve_device_serial(device)
         payload = self.get_raw_device_state(devicesn)
-        identity = self._identity_from_mapping(payload, serial_hint=devicesn)
+        state_payload = self._extract_state_payload(payload)
+        identity = self._identity_from_mapping(state_payload, serial_hint=devicesn)
         return DeviceState(
             identity=identity,
-            properties=self._extract_properties(payload),
+            properties=self._extract_properties(state_payload),
             source=self.kind,
-            online=self._extract_online(payload),
+            online=self._extract_online(state_payload),
             timestamp=datetime.now(timezone.utc),
-            raw=mapping_copy(payload),
+            raw=mapping_copy(state_payload),
         )
 
     def set_device_state(self, device: DeviceReference, **changes: Any) -> CommandResult:
         """Send a control command and normalize the response."""
         devicesn = self._resolve_device_serial(device)
         payload = self.update_raw_device_state(devicesn, **changes)
-        identity = self._identity_from_mapping(payload, serial_hint=devicesn)
+        identity = self._identity_from_mapping(
+            self._extract_state_payload(payload), serial_hint=devicesn
+        )
         return CommandResult(
             identity=identity,
             source=self.kind,
@@ -109,30 +122,62 @@ class CloudProvider(BaseProvider):
 
     def get_raw_devices(self) -> Dict[str, Any]:
         """Return the raw cloud discovery payload."""
-        self._ensure_authenticated()
-        assert self.endpoint is not None
-        assert self.access_token is not None
-        return self._transport.get_devices(self.endpoint, self.access_token)
+        def _call() -> Dict[str, Any]:
+            assert self.endpoint is not None
+            assert self.access_token is not None
+            return self._transport.get_devices(self.endpoint, self.access_token)
+
+        return self._request_with_reauth(_call)
 
     def get_raw_device_state(self, devicesn: str) -> Dict[str, Any]:
         """Return the raw cloud state payload."""
-        self._ensure_authenticated()
-        assert self.endpoint is not None
-        assert self.access_token is not None
-        return self._transport.get_device_state(self.endpoint, self.access_token, devicesn)
+        def _call() -> Dict[str, Any]:
+            assert self.endpoint is not None
+            assert self.access_token is not None
+            return self._transport.get_device_state(
+                self.endpoint, self.access_token, devicesn
+            )
+
+        return self._request_with_reauth(_call)
 
     def update_raw_device_state(self, devicesn: str, **changes: Any) -> Dict[str, Any]:
         """Return the raw cloud control payload."""
         if not changes:
             raise DreoConfigurationError("At least one device change must be provided")
-        self._ensure_authenticated()
-        assert self.endpoint is not None
-        assert self.access_token is not None
-        return self._transport.set_device_state(self.endpoint, self.access_token, devicesn, changes)
+        def _call() -> Dict[str, Any]:
+            assert self.endpoint is not None
+            assert self.access_token is not None
+            return self._transport.set_device_state(
+                self.endpoint, self.access_token, devicesn, changes
+            )
+
+        return self._request_with_reauth(_call)
+
+    def get_legacy_devices(self) -> List[Dict[str, Any]]:
+        """Return raw device entries for compatibility callers."""
+        return [dict(item) for item in self._extract_device_items(self.get_raw_devices())]
+
+    def get_legacy_device_state(self, devicesn: str) -> Dict[str, Any]:
+        """Return the raw device state mapping for compatibility callers."""
+        return self._extract_state_payload(self.get_raw_device_state(devicesn))
 
     def _ensure_authenticated(self) -> None:
         if not self.is_authenticated:
             self.authenticate()
+
+    def _request_with_reauth(self, request: Any) -> Dict[str, Any]:
+        """Execute a cloud request and retry once after reauthentication."""
+        self._ensure_authenticated()
+        try:
+            return request()
+        except DreoAuthenticationError:
+            if not self.config.username or not self.config.password:
+                raise
+            self._authenticated = False
+            self.config.access_token = None
+            self.config.endpoint = None
+            self.authenticate()
+            return request()
 
     def _resolve_device_serial(self, device: DeviceReference) -> str:
         if isinstance(device, DeviceIdentity):
@@ -144,17 +189,31 @@ class CloudProvider(BaseProvider):
         return device
 
     def _extract_device_items(self, payload: Mapping[str, Any]) -> Iterable[Mapping[str, Any]]:
-        if isinstance(payload, list):
-            return [as_dict(item) for item in payload]
+        raw_items = self._extract_response_data(payload)
+        if isinstance(raw_items, list):
+            return [as_dict(item) for item in raw_items]
 
-        for key in ("devices", "deviceList", "list", "items", "records"):
-            value = payload.get(key)
-            if isinstance(value, list):
-                return [as_dict(item) for item in value]
+        if isinstance(raw_items, Mapping):
+            for key in ("devices", "deviceList", "list", "items", "records"):
+                value = raw_items.get(key)
+                if isinstance(value, list):
+                    return [as_dict(item) for item in value]
 
-        if payload:
-            return [as_dict(payload)]
         return []
+
+    @staticmethod
+    def _extract_response_data(payload: Mapping[str, Any]) -> Any:
+        """Return the inner response payload when using the v2 API envelope."""
+        if isinstance(payload, Mapping) and "data" in payload:
+            return payload["data"]
+        return payload
+
+    def _extract_state_payload(self, payload: Mapping[str, Any]) -> Dict[str, Any]:
+        """Return the raw device state mapping from a v2 response."""
+        state = self._extract_response_data(payload)
+        if isinstance(state, Mapping):
+            return dict(state)
+        return {}
 
     def _map_device_info(self, item: Mapping[str, Any]) -> DeviceInfo:
         identity = self._identity_from_mapping(item)
@@ -180,7 +239,7 @@ class CloudProvider(BaseProvider):
         return dict(payload)
 
     def _extract_online(self, payload: Mapping[str, Any]) -> Optional[bool]:
-        for key in ("online", "isOnline", "available", "status"):
+        for key in ("online", "isOnline", "available", "status", "connected"):
             if key in payload:
                 online = maybe_online(payload.get(key))
                 if online is not None:

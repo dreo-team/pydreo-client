@@ -14,7 +14,15 @@ from ..core.exceptions import (
 )
 from ..version import __version__
 from .auth import prepare_cloud_password, resolve_cloud_endpoint, strip_token_region
-from .const import BASE_URL, CLIENT_ID, CLIENT_SECRET, ENDPOINTS, REQUEST_TIMEOUT, USER_AGENT
+from .const import (
+    API_VERSION,
+    BASE_URL,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    ENDPOINTS,
+    REQUEST_TIMEOUT,
+    USER_AGENT,
+)
 
 
 class CloudTransport:
@@ -47,9 +55,10 @@ class CloudTransport:
             params=self._base_params(),
             json_body=body,
         )
-        access_token = payload.get("access_token")
+        auth_data = payload.get("data", payload)
+        access_token = auth_data.get("access_token") or auth_data.get("token")
         if access_token:
-            payload["endpoint"] = resolve_cloud_endpoint(access_token)
+            auth_data["endpoint"] = resolve_cloud_endpoint(access_token)
         return payload
 
     def get_devices(self, endpoint: str, access_token: str) -> Dict[str, Any]:
@@ -129,9 +138,11 @@ class CloudTransport:
                 payload = response.json()
             except ValueError as err:
                 raise DreoConnectionError("Cloud response returned invalid JSON") from err
-            if payload.get("code") == 0:
-                return payload.get("data", {})
-            raise DreoBusinessError(payload.get("msg", "Unknown business error"))
+            if isinstance(payload, Mapping) and payload.get("code") == 0:
+                return dict(payload)
+            if isinstance(payload, Mapping):
+                raise DreoBusinessError(payload.get("msg", "Unknown business error"))
+            raise DreoBusinessError("Unknown business error")
 
         if response.status_code in (401, 403):
             raise DreoAuthenticationError("Invalid authentication credentials")
@@ -147,7 +158,7 @@ class CloudTransport:
     def _base_params() -> Dict[str, Any]:
         return {
             "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
-            "pydreover": __version__,
+            "dreover": API_VERSION or __version__,
         }
 
     def _get_session(self) -> Any:

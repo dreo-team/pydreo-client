@@ -23,33 +23,48 @@ class FakeCloudTransport:
 
     def login(self, username, password):
         return {
-            "access_token": "token-value:EU",
-            "endpoint": EU_BASE_URL,
-            "username": username,
-            "password": password,
+            "code": 0,
+            "msg": "success",
+            "data": {
+                "access_token": "token-value:EU",
+                "endpoint": EU_BASE_URL,
+                "username": username,
+                "password": password,
+            },
         }
 
     def get_devices(self, endpoint, access_token):
         return {
-            "devices": [
+            "code": 0,
+            "msg": "success",
+            "data": [
                 {
                     "deviceSn": "SN-100",
                     "deviceName": "Living Room Tower Fan",
                     "deviceModel": "DR-HTF001",
                     "online": True,
                 }
-            ]
+            ],
         }
 
     def get_device_state(self, endpoint, access_token, devicesn):
         return {
-            "deviceSn": devicesn,
-            "state": {"power": "on", "speed": 3},
-            "online": 1,
+            "code": 0,
+            "msg": "success",
+            "data": {
+                "deviceSn": devicesn,
+                "power": "on",
+                "speed": 3,
+                "connected": True,
+            },
         }
 
     def set_device_state(self, endpoint, access_token, devicesn, changes):
-        return {"deviceSn": devicesn, "desired": dict(changes), "accepted": True}
+        return {
+            "code": 0,
+            "msg": "success",
+            "data": {"deviceSn": devicesn, "desired": dict(changes), "accepted": True},
+        }
 
 
 class CloudProviderTests(unittest.TestCase):
@@ -81,7 +96,7 @@ class CloudProviderTests(unittest.TestCase):
         with patch.object(
             transport,
             "_request",
-            return_value={"access_token": "token-value:EU"},
+            return_value={"code": 0, "data": {"access_token": "token-value:EU"}},
         ) as mock_request:
             transport.login("demo@example.com", "secret")
 
@@ -95,12 +110,30 @@ class CloudProviderTests(unittest.TestCase):
         with patch.object(
             transport,
             "_request",
-            return_value={"access_token": "token-value:EU"},
+            return_value={"code": 0, "data": {"access_token": "token-value:EU"}},
         ) as mock_request:
             transport.login("demo@example.com", digest)
 
         body = mock_request.call_args.kwargs["json_body"]
         self.assertEqual(body["password"], digest)
+
+    def test_transport_uses_v2_endpoints_and_dreover_param(self) -> None:
+        transport = CloudTransport()
+
+        with patch.object(
+            transport,
+            "_request",
+            return_value={"code": 0, "data": {}},
+        ) as mock_request:
+            transport.get_devices(BASE_URL, "token-value:NA")
+            transport.get_device_state(BASE_URL, "token-value:NA", "SN-100")
+            transport.set_device_state(BASE_URL, "token-value:NA", "SN-100", {"power": "on"})
+
+        calls = mock_request.call_args_list
+        self.assertIn("/api/v2/device/list", calls[0].args[0])
+        self.assertEqual(calls[0].kwargs["params"]["dreover"], "1.0.0")
+        self.assertIn("/api/v2/device/state", calls[1].args[0])
+        self.assertIn("/api/v2/device/control", calls[2].args[0])
 
     def test_provider_maps_devices_and_state(self) -> None:
         provider = CloudProvider(
@@ -118,7 +151,44 @@ class CloudProviderTests(unittest.TestCase):
         self.assertEqual(devices[0].identity.serial_number, "SN-100")
         self.assertEqual(devices[0].metadata["token_region"], "EU")
         self.assertEqual(state.properties["speed"], 3)
-        self.assertTrue(result.raw["accepted"])
+        self.assertTrue(result.raw["code"] == 0)
+        self.assertEqual(result.raw["data"]["desired"]["power"], "off")
+
+    def test_compatibility_client_returns_legacy_shapes(self) -> None:
+        provider = CloudProvider(
+            CloudConfig(username="demo@example.com", password="secret"),
+            transport=FakeCloudTransport(),
+        )
+
+        devices = provider.get_legacy_devices()
+        state = provider.get_legacy_device_state("SN-100")
+
+        self.assertEqual(devices[0]["deviceSn"], "SN-100")
+        self.assertEqual(state["speed"], 3)
+
+    def test_provider_reauthenticates_once_on_auth_failure(self) -> None:
+        class ReauthTransport(FakeCloudTransport):
+            def __init__(self):
+                self.calls = 0
+
+            def get_devices(self, endpoint, access_token):
+                self.calls += 1
+                if self.calls == 1:
+                    from pydreo.core.exceptions import DreoAuthenticationError
+
+                    raise DreoAuthenticationError("expired")
+                return super().get_devices(endpoint, access_token)
+
+        transport = ReauthTransport()
+        provider = CloudProvider(
+            CloudConfig(username="demo@example.com", password="secret"),
+            transport=transport,
+        )
+
+        devices = provider.discover_devices()
+
+        self.assertEqual(len(devices), 1)
+        self.assertEqual(transport.calls, 2)
 
     def test_provider_is_http_only(self) -> None:
         provider = CloudProvider(

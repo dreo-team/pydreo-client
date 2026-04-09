@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ..client import DreoClient as UnifiedDreoClient
 from ..core.strategy import ConnectionStrategy
@@ -66,16 +66,16 @@ class DreoCloudClient(UnifiedDreoClient):
         """Authenticate against Dreo Cloud."""
         return self._cloud_provider.authenticate()
 
-    def get_devices(self) -> Dict[str, Any]:
-        """Return the original cloud discovery payload."""
-        return self._cloud_provider.get_raw_devices()
+    def get_devices(self) -> List[Dict[str, Any]]:
+        """Return raw cloud device entries for compatibility callers."""
+        return self._cloud_provider.get_legacy_devices()
 
     def get_status(self, devicesn: str) -> Dict[str, Any]:
-        """Return the original cloud device state payload."""
-        return self._cloud_provider.get_raw_device_state(devicesn)
+        """Return the raw cloud device state mapping."""
+        return self._cloud_provider.get_legacy_device_state(devicesn)
 
     def update_status(self, devicesn: str, **kwargs: Any) -> Dict[str, Any]:
-        """Return the original cloud control payload."""
+        """Return the raw cloud control payload."""
         return self._cloud_provider.update_raw_device_state(devicesn, **kwargs)
 
 
