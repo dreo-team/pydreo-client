@@ -7,20 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-04-10
+
 ### Changed
-- Rebuilt the package around a provider-based architecture under the new `pydreo/` package.
-- Replaced the old direct helper coupling with a unified `DreoClient` facade plus `core`, `cloud`, and `local` modules.
-- Split cloud functionality into dedicated auth, transport, and provider layers.
-- Moved Dreo cloud password MD5 handling into the SDK while preserving already-hashed values for compatibility.
-- Removed cloud WebSocket support so cloud access is now HTTP-only.
-- Removed the framework-level subscription abstraction so the public API is now request/response only.
-- Updated packaging metadata so the published distribution matches the real package structure.
+- Rebuilt the SDK from the original cloud-only helper-based client into a provider-based architecture under the `pydreo/` package.
+- Introduced a unified top-level `DreoClient` facade backed by explicit `core`, `cloud`, and `local` modules.
+- Split cloud functionality into dedicated auth, transport, and provider layers instead of routing everything through `helpers.py`.
+- Migrated cloud device operations to the v2 device APIs (`/api/v2/device/list`, `/api/v2/device/state`, and `/api/v2/device/control`) while keeping OAuth login in place.
+- Moved Dreo cloud password MD5 handling into the SDK so callers can pass plaintext credentials while preserving compatibility with already-hashed passwords.
+- Updated packaging metadata, project documentation, and distribution naming to align with the `pydreo-client` package layout.
 
 ### Added
-- Added normalized device models, provider strategy routing, and a provider registry for multi-channel orchestration.
+- Added normalized core models for device identity, discovery, state, and command results.
+- Added provider routing, provider registry, and connection strategy support for future multi-channel orchestration.
+- Added a dedicated cloud compatibility client at `pydreo.cloud.client.DreoClient`.
 - Added a `LocalProvider` shell with config, discovery, protocol, and transport extension points for future LAN support.
-- Added compatibility entrypoints so legacy cloud imports can continue working while the new architecture is adopted.
-- Added unit tests covering provider routing, cloud mapping, and the local provider shell.
+- Added unit tests covering the unified client facade, cloud provider mapping, token-region handling, and the local provider shell.
+
+### Removed
+- Removed the legacy helper-centric implementation in `helpers.py`.
+- Removed the old top-level `const.py` and `exceptions.py` modules in favor of the new provider/core exception and transport structure.
+- Removed the old single-layer internal design that tightly coupled authentication, device discovery, and control behavior.
 
 ## [0.0.7] - 2024-08-22
 
